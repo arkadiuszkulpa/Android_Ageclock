@@ -23,8 +23,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ageclock.app.data.model.AgeGranularity
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.ui.addperson.AddEditPersonDialog
+import com.ageclock.app.ui.home.components.AboutBanner
 import com.ageclock.app.ui.home.components.ClockSection
-import com.ageclock.app.ui.home.components.MotivationalHeader
 import com.ageclock.app.ui.home.components.PersonTile
 import com.ageclock.app.ui.theme.AgeclockTheme
 
@@ -64,7 +64,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 item {
-                    MotivationalHeader()
+                    AboutBanner()
                 }
 
                 item {
@@ -152,7 +152,7 @@ private fun HomeScreenPreview(people: List<Person>) {
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 item {
-                    MotivationalHeader()
+                    AboutBanner()
                 }
 
                 item {
