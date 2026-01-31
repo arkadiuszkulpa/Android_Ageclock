@@ -176,8 +176,14 @@ fun AddEditPersonDialog(
 
     // Date picker dialog
     if (showDatePicker) {
+        val currentTimeMillis = System.currentTimeMillis()
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDateMillis ?: System.currentTimeMillis()
+            initialSelectedDateMillis = selectedDateMillis ?: currentTimeMillis,
+            selectableDates = object : androidx.compose.material3.SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis <= currentTimeMillis
+                }
+            }
         )
 
         DatePickerDialog(
@@ -186,10 +192,7 @@ fun AddEditPersonDialog(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            // Validate date is not in the future
-                            if (millis <= System.currentTimeMillis()) {
-                                selectedDateMillis = millis
-                            }
+                            selectedDateMillis = millis
                         }
                         showDatePicker = false
                     }
@@ -203,12 +206,7 @@ fun AddEditPersonDialog(
                 }
             }
         ) {
-            DatePicker(
-                state = datePickerState,
-                dateValidator = { timestamp ->
-                    timestamp <= System.currentTimeMillis()
-                }
-            )
+            DatePicker(state = datePickerState)
         }
     }
 }
