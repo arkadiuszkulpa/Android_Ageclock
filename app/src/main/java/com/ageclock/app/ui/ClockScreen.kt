@@ -41,8 +41,8 @@ fun ClockScreen(
         }
     }
 
-    // Get current time
-    val now = LocalDateTime.now()
+    // Get current time - recalculates when currentTimeMillis changes
+    val now = remember(currentTimeMillis) { LocalDateTime.now() }
 
     // Format time as HH:MM:SS
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm:ss", Locale.getDefault()) }
