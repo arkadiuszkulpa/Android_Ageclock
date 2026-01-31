@@ -9,7 +9,7 @@ data class Person(
     val id: Long = 0,
     val name: String,
     val dateOfBirth: Long, // Epoch millis
-    val ageDisplayGranularity: AgeGranularity = AgeGranularity.YEARS_MONTHS_DAYS,
+    val displayUnits: Int = AgeUnits.YEARS_MONTHS_DAYS, // Bitmask of AgeUnits
     val showInWidget: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )

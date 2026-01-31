@@ -4,11 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
 import com.ageclock.app.data.model.Person
 
 @Database(entities = [Person::class], version = 1, exportSchema = false)
-@TypeConverters(Converters::class)
 abstract class AgeclockDatabase : RoomDatabase() {
     abstract fun personDao(): PersonDao
 

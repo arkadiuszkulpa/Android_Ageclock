@@ -32,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ageclock.app.data.model.AgeGranularity
+import com.ageclock.app.data.model.AgeUnits
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.ui.theme.AgeclockTheme
 import com.ageclock.app.util.AgeCalculator
@@ -47,11 +47,11 @@ fun PersonTile(
 ) {
     var currentTimeMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
-    // Update every second only if granularity needs it
-    val updateInterval = when (person.ageDisplayGranularity) {
-        AgeGranularity.TOTAL_SECONDS -> 1000L
-        AgeGranularity.TOTAL_MINUTES -> 60_000L
-        AgeGranularity.TOTAL_HOURS -> 60_000L
+    // Update interval based on selected units
+    val updateInterval = when {
+        AgeUnits.hasUnit(person.displayUnits, AgeUnits.SECONDS) -> 1000L
+        AgeUnits.hasUnit(person.displayUnits, AgeUnits.MINUTES) -> 60_000L
+        AgeUnits.hasUnit(person.displayUnits, AgeUnits.HOURS) -> 60_000L
         else -> 60_000L // Update every minute for day-based granularities
     }
 
@@ -98,7 +98,7 @@ fun PersonTile(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = age.format(person.ageDisplayGranularity),
+                    text = age.format(person.displayUnits),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -153,7 +153,7 @@ private fun PersonTilePreview() {
                 id = 1,
                 name = "Emma",
                 dateOfBirth = System.currentTimeMillis() - (5L * 365 * 24 * 60 * 60 * 1000),
-                ageDisplayGranularity = AgeGranularity.YEARS_MONTHS_DAYS,
+                displayUnits = AgeUnits.YEARS_MONTHS_DAYS,
                 showInWidget = true
             ),
             onClick = {},
@@ -171,7 +171,7 @@ private fun PersonTileSecondsPreview() {
                 id = 2,
                 name = "Grandpa Joe",
                 dateOfBirth = System.currentTimeMillis() - (82L * 365 * 24 * 60 * 60 * 1000),
-                ageDisplayGranularity = AgeGranularity.TOTAL_SECONDS,
+                displayUnits = AgeUnits.SECONDS,
                 showInWidget = false
             ),
             onClick = {},

@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -25,10 +25,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,13 +39,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ageclock.app.data.model.AgeGranularity
+import com.ageclock.app.data.model.AgeUnits
 import com.ageclock.app.data.model.Person
-import com.ageclock.app.ui.addperson.components.GranularitySelector
+import com.ageclock.app.ui.addperson.components.UnitSelector
 import com.ageclock.app.ui.theme.AgeclockTheme
 import com.ageclock.app.util.AgeCalculator
 import java.time.Instant
-import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -52,16 +56,31 @@ import java.util.Locale
 fun AddEditPersonDialog(
     person: Person?,
     onDismiss: () -> Unit,
-    onSave: (name: String, dateOfBirth: Long, granularity: AgeGranularity, showInWidget: Boolean) -> Unit,
+    onSave: (name: String, dateOfBirth: Long, displayUnits: Int, showInWidget: Boolean) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
     var name by remember(person) { mutableStateOf(person?.name ?: "") }
     var selectedDateMillis by remember(person) { mutableStateOf(person?.dateOfBirth) }
-    var granularity by remember(person) {
-        mutableStateOf(person?.ageDisplayGranularity ?: AgeGranularity.YEARS_MONTHS_DAYS)
+    var selectedHour by remember(person) {
+        mutableIntStateOf(
+            person?.dateOfBirth?.let { millis ->
+                Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).hour
+            } ?: 0
+        )
+    }
+    var selectedMinute by remember(person) {
+        mutableIntStateOf(
+            person?.dateOfBirth?.let { millis ->
+                Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).minute
+            } ?: 0
+        )
+    }
+    var displayUnits by remember(person) {
+        mutableIntStateOf(person?.displayUnits ?: AgeUnits.YEARS_MONTHS_DAYS)
     }
     var showInWidget by remember(person) { mutableStateOf(person?.showInWidget ?: false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     val isEditing = person != null
     val isValid by remember {
@@ -75,6 +94,16 @@ fun AddEditPersonDialog(
     val formattedDate = selectedDateMillis?.let { millis ->
         AgeCalculator.millisToLocalDate(millis).format(dateFormatter)
     } ?: "Select date"
+
+    val formattedTime = String.format(Locale.getDefault(), "%02d:%02d", selectedHour, selectedMinute)
+
+    // Combine date and time into final millis
+    val finalDateTimeMillis: Long? = selectedDateMillis?.let { dateMillis ->
+        val date = AgeCalculator.millisToLocalDate(dateMillis)
+        val time = LocalTime.of(selectedHour, selectedMinute)
+        val dateTime = LocalDateTime.of(date, time)
+        dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -115,12 +144,31 @@ fun AddEditPersonDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Time of Birth (optional)
+                OutlinedTextField(
+                    value = formattedTime,
+                    onValueChange = {},
+                    label = { Text("Time of Birth (optional)") },
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showTimePicker = true }) {
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = "Select time"
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Granularity selector
-                GranularitySelector(
-                    selected = granularity,
-                    onSelected = { granularity = it }
+                // Unit selector (checkboxes)
+                UnitSelector(
+                    selectedUnits = displayUnits,
+                    onUnitsChanged = { displayUnits = it }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -145,8 +193,8 @@ fun AddEditPersonDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    selectedDateMillis?.let { dateMillis ->
-                        onSave(name.trim(), dateMillis, granularity, showInWidget)
+                    finalDateTimeMillis?.let { dateTimeMillis ->
+                        onSave(name.trim(), dateTimeMillis, displayUnits, showInWidget)
                     }
                 },
                 enabled = isValid
@@ -209,6 +257,44 @@ fun AddEditPersonDialog(
             DatePicker(state = datePickerState)
         }
     }
+
+    // Time picker dialog
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = selectedHour,
+            initialMinute = selectedMinute,
+            is24Hour = true
+        )
+
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("Select Time of Birth") },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    TimeInput(state = timePickerState)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedHour = timePickerState.hour
+                        selectedMinute = timePickerState.minute
+                        showTimePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Preview
@@ -232,7 +318,7 @@ private fun EditPersonDialogPreview() {
                 id = 1,
                 name = "Emma",
                 dateOfBirth = System.currentTimeMillis() - (5L * 365 * 24 * 60 * 60 * 1000),
-                ageDisplayGranularity = AgeGranularity.YEARS_MONTHS_DAYS,
+                displayUnits = AgeUnits.YEARS_MONTHS_DAYS,
                 showInWidget = true
             ),
             onDismiss = {},

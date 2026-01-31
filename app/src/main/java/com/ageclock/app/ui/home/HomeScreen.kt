@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ageclock.app.data.model.AgeGranularity
+import com.ageclock.app.data.model.AgeUnits
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.ui.addperson.AddEditPersonDialog
 import com.ageclock.app.ui.home.components.AboutBanner
@@ -117,14 +117,14 @@ private fun HomeScreenWithPeoplePreview() {
                     id = 1,
                     name = "Emma",
                     dateOfBirth = System.currentTimeMillis() - (5L * 365 * 24 * 60 * 60 * 1000),
-                    ageDisplayGranularity = AgeGranularity.YEARS_MONTHS_DAYS,
+                    displayUnits = AgeUnits.YEARS_MONTHS_DAYS,
                     showInWidget = true
                 ),
                 Person(
                     id = 2,
                     name = "Grandpa Joe",
                     dateOfBirth = System.currentTimeMillis() - (82L * 365 * 24 * 60 * 60 * 1000),
-                    ageDisplayGranularity = AgeGranularity.YEARS_DAYS,
+                    displayUnits = AgeUnits.YEARS_DAYS,
                     showInWidget = true
                 )
             )

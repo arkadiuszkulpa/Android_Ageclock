@@ -11,7 +11,7 @@ import android.widget.RemoteViews
 import com.ageclock.app.MainActivity
 import com.ageclock.app.R
 import com.ageclock.app.data.local.AgeclockDatabase
-import com.ageclock.app.data.model.AgeGranularity
+import com.ageclock.app.data.model.AgeUnits
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.util.AgeCalculator
 import kotlinx.coroutines.CoroutineScope
@@ -70,14 +70,15 @@ class AgeWidgetProvider : AppWidgetProvider() {
                 people.take(MAX_WIDGET_PEOPLE).forEach { person ->
                     val age = AgeCalculator.calculateAge(person.dateOfBirth, currentTime)
 
-                    // Don't use TOTAL_SECONDS in widget (battery concern), fall back to TOTAL_MINUTES
-                    val displayGranularity = if (person.ageDisplayGranularity == AgeGranularity.TOTAL_SECONDS) {
-                        AgeGranularity.TOTAL_MINUTES
+                    // Don't use SECONDS in widget (battery concern), remove seconds flag if present
+                    val displayUnits = if (AgeUnits.hasUnit(person.displayUnits, AgeUnits.SECONDS)) {
+                        // Replace seconds with minutes for widget display
+                        (person.displayUnits and AgeUnits.SECONDS.inv()) or AgeUnits.MINUTES
                     } else {
-                        person.ageDisplayGranularity
+                        person.displayUnits
                     }
 
-                    val ageText = age.formatCompact(displayGranularity)
+                    val ageText = age.formatCompact(displayUnits)
 
                     val personView = RemoteViews(context.packageName, R.layout.widget_person_item)
                     personView.setTextViewText(R.id.person_name, person.name)

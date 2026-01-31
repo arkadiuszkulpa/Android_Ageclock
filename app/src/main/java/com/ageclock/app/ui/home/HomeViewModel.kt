@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ageclock.app.data.local.AgeclockDatabase
-import com.ageclock.app.data.model.AgeGranularity
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.data.repository.PersonRepository
 import com.ageclock.app.widget.AgeWidgetProvider
@@ -51,7 +50,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun savePerson(
         name: String,
         dateOfBirth: Long,
-        granularity: AgeGranularity,
+        displayUnits: Int,
         showInWidget: Boolean
     ) {
         viewModelScope.launch {
@@ -62,7 +61,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     existingPerson.copy(
                         name = name,
                         dateOfBirth = dateOfBirth,
-                        ageDisplayGranularity = granularity,
+                        displayUnits = displayUnits,
                         showInWidget = showInWidget
                     )
                 )
@@ -72,7 +71,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     Person(
                         name = name,
                         dateOfBirth = dateOfBirth,
-                        ageDisplayGranularity = granularity,
+                        displayUnits = displayUnits,
                         showInWidget = showInWidget
                     )
                 )
