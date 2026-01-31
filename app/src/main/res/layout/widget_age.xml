@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="12dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Container for people ages - will be populated dynamically -->
+    <LinearLayout
+        android:id="@+id/widget_people_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal" />
+
+    <!-- Empty state message -->
+    <TextView
+        android:id="@+id/widget_empty_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap to add people"
+        android:textColor="#B3FFFFFF"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+</LinearLayout>

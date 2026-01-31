@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import com.ageclock.app.ui.ClockScreen
+import com.ageclock.app.ui.home.HomeScreen
 import com.ageclock.app.ui.theme.AgeclockTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AgeclockTheme {
-                ClockScreen(modifier = Modifier.fillMaxSize())
+                HomeScreen(modifier = Modifier.fillMaxSize())
             }
         }
     }

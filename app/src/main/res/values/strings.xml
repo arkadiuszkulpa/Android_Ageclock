@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ageclock</string>
-    <string name="widget_name">Ageclock Widget</string>
+    <string name="app_name">AgeClock</string>
+    <string name="widget_name">Clock Widget</string>
     <string name="widget_description">Display current time and date on your home screen</string>
+    <string name="age_widget_name">Age Widget</string>
+    <string name="age_widget_description">Display the ages of your loved ones on your home screen</string>
 </resources>
