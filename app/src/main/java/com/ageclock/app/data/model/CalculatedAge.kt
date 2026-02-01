@@ -37,6 +37,11 @@ data class CalculatedAge(
         }
 
         // Multiple units = show breakdown
+        // For time units (h/m/s), always show if selected (even if 0) when a smaller time unit is also selected
+        val hasTimeUnits = AgeUnits.hasUnit(units, AgeUnits.HOURS) ||
+                AgeUnits.hasUnit(units, AgeUnits.MINUTES) ||
+                AgeUnits.hasUnit(units, AgeUnits.SECONDS)
+
         return buildString {
             if (AgeUnits.hasUnit(units, AgeUnits.YEARS) && years > 0) {
                 append("$years ${pluralize(years, "year", "years")}")
@@ -49,11 +54,12 @@ data class CalculatedAge(
                 if (isNotEmpty()) append(", ")
                 append("$days ${pluralize(days, "day", "days")}")
             }
-            if (AgeUnits.hasUnit(units, AgeUnits.HOURS) && hours > 0) {
+            // For time units: show even if 0 when part of a time breakdown
+            if (AgeUnits.hasUnit(units, AgeUnits.HOURS)) {
                 if (isNotEmpty()) append(", ")
                 append("$hours ${pluralize(hours, "hour", "hours")}")
             }
-            if (AgeUnits.hasUnit(units, AgeUnits.MINUTES) && minutes > 0) {
+            if (AgeUnits.hasUnit(units, AgeUnits.MINUTES)) {
                 if (isNotEmpty()) append(", ")
                 append("$minutes ${pluralize(minutes, "minute", "minutes")}")
             }
@@ -100,11 +106,12 @@ data class CalculatedAge(
                 if (isNotEmpty()) append(", ")
                 append("${days}d")
             }
-            if (AgeUnits.hasUnit(units, AgeUnits.HOURS) && hours > 0) {
+            // For time units: show even if 0 when part of a time breakdown
+            if (AgeUnits.hasUnit(units, AgeUnits.HOURS)) {
                 if (isNotEmpty()) append(", ")
                 append("${hours}h")
             }
-            if (AgeUnits.hasUnit(units, AgeUnits.MINUTES) && minutes > 0) {
+            if (AgeUnits.hasUnit(units, AgeUnits.MINUTES)) {
                 if (isNotEmpty()) append(", ")
                 append("${minutes}m")
             }

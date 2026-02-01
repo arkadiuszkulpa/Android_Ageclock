@@ -55,10 +55,10 @@ fun PersonTile(
         else -> 60_000L // Update every minute for day-based granularities
     }
 
-    LaunchedEffect(updateInterval) {
+    LaunchedEffect(person.id, updateInterval) {
         while (true) {
-            currentTimeMillis = System.currentTimeMillis()
             delay(updateInterval)
+            currentTimeMillis = System.currentTimeMillis()
         }
     }
 

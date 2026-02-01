@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -136,7 +136,7 @@ fun AddEditPersonDialog(
                     trailingIcon = {
                         IconButton(onClick = { showDatePicker = true }) {
                             Icon(
-                                imageVector = Icons.Default.CalendarMonth,
+                                imageVector = Icons.Default.DateRange,
                                 contentDescription = "Select date"
                             )
                         }
@@ -155,7 +155,7 @@ fun AddEditPersonDialog(
                     trailingIcon = {
                         IconButton(onClick = { showTimePicker = true }) {
                             Icon(
-                                imageVector = Icons.Default.AccessTime,
+                                imageVector = Icons.Outlined.AccessTime,
                                 contentDescription = "Select time"
                             )
                         }
