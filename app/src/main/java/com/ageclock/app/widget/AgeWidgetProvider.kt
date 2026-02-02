@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.text.Html
 import android.view.View
 import android.widget.RemoteViews
 import com.ageclock.app.MainActivity
@@ -45,9 +46,14 @@ class AgeWidgetProvider : AppWidgetProvider() {
                     val age = AgeCalculator.calculateAge(person.dateOfBirth, currentTime)
                     val ageText = age.formatCompact(person.displayUnits)
 
+                    // Combine name (bold) and age into single text that wraps naturally
+                    val combinedText = Html.fromHtml(
+                        "<b>${person.name}</b> $ageText",
+                        Html.FROM_HTML_MODE_COMPACT
+                    )
+
                     val personView = RemoteViews(context.packageName, R.layout.widget_person_item)
-                    personView.setTextViewText(R.id.person_name, person.name)
-                    personView.setTextViewText(R.id.person_age, ageText)
+                    personView.setTextViewText(R.id.person_info, combinedText)
 
                     views.addView(R.id.widget_people_container, personView)
                 }
