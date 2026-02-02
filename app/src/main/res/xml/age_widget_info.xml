@@ -6,7 +6,7 @@
     android:targetCellHeight="2"
     android:minResizeWidth="110dp"
     android:minResizeHeight="60dp"
-    android:updatePeriodMillis="3600000"
+    android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_age"
     android:previewImage="@drawable/widget_preview"
     android:previewLayout="@layout/widget_age"

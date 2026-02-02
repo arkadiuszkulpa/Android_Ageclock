@@ -3,7 +3,9 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(./gradlew assembleDebug:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "Bash(gradlew.bat assembleDebug:*)",
+      "Bash(cmd /c \"gradlew.bat assembleDebug\")"
     ]
   }
 }

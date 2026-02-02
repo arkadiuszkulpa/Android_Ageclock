@@ -4,18 +4,23 @@ import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.ageclock.app.data.local.AgeclockDatabase
+import com.ageclock.app.data.model.AgeUnits
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 object WidgetUpdateScheduler {
 
-    private const val WORK_NAME = "age_widget_daily_update"
+    private const val WORK_NAME_DAILY = "age_widget_daily_update"
+    private const val WORK_NAME_FREQUENT = "age_widget_frequent_update"
 
     fun scheduleWidgetUpdates(context: Context) {
         val workManager = WorkManager.getInstance(context)
 
-        // Schedule daily update - the widget will also update hourly via updatePeriodMillis
-        // but this ensures an update at midnight for accurate day counts
+        // Always schedule daily update at midnight for accurate day counts
         val dailyRequest = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(
             1, TimeUnit.DAYS
         )
@@ -23,14 +28,43 @@ object WidgetUpdateScheduler {
             .build()
 
         workManager.enqueueUniquePeriodicWork(
-            WORK_NAME,
+            WORK_NAME_DAILY,
             ExistingPeriodicWorkPolicy.KEEP,
             dailyRequest
         )
+
+        // Check if any widget person needs frequent updates (has seconds/minutes selected)
+        CoroutineScope(Dispatchers.IO).launch {
+            val database = AgeclockDatabase.getInstance(context)
+            val widgetPeople = database.personDao().getWidgetPeopleSync()
+
+            val needsFrequentUpdates = widgetPeople.any { person ->
+                AgeUnits.hasUnit(person.displayUnits, AgeUnits.SECONDS) ||
+                        AgeUnits.hasUnit(person.displayUnits, AgeUnits.MINUTES)
+            }
+
+            if (needsFrequentUpdates) {
+                // Schedule frequent updates (minimum 15 minutes for WorkManager)
+                val frequentRequest = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(
+                    15, TimeUnit.MINUTES
+                ).build()
+
+                workManager.enqueueUniquePeriodicWork(
+                    WORK_NAME_FREQUENT,
+                    ExistingPeriodicWorkPolicy.REPLACE,
+                    frequentRequest
+                )
+            } else {
+                // Cancel frequent updates if not needed
+                workManager.cancelUniqueWork(WORK_NAME_FREQUENT)
+            }
+        }
     }
 
     fun cancelWidgetUpdates(context: Context) {
-        WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+        val workManager = WorkManager.getInstance(context)
+        workManager.cancelUniqueWork(WORK_NAME_DAILY)
+        workManager.cancelUniqueWork(WORK_NAME_FREQUENT)
     }
 
     private fun calculateDelayToMidnight(): Long {

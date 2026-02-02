@@ -31,6 +31,7 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/age_widget_info" />
         </receiver>
+
     </application>
 
 </manifest>

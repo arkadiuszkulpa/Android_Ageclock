@@ -11,7 +11,6 @@ import android.widget.RemoteViews
 import com.ageclock.app.MainActivity
 import com.ageclock.app.R
 import com.ageclock.app.data.local.AgeclockDatabase
-import com.ageclock.app.data.model.AgeUnits
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.util.AgeCalculator
 import kotlinx.coroutines.CoroutineScope
@@ -19,31 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AgeWidgetProvider : AppWidgetProvider() {
-
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val database = AgeclockDatabase.getInstance(context)
-            val widgetPeople = database.personDao().getWidgetPeopleSync()
-
-            for (appWidgetId in appWidgetIds) {
-                updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople)
-            }
-        }
-    }
-
-    override fun onEnabled(context: Context) {
-        // Schedule periodic updates via WorkManager
-        WidgetUpdateScheduler.scheduleWidgetUpdates(context)
-    }
-
-    override fun onDisabled(context: Context) {
-        // Cancel scheduled updates
-        WidgetUpdateScheduler.cancelWidgetUpdates(context)
-    }
 
     companion object {
         private const val MAX_WIDGET_PEOPLE = 4
@@ -69,16 +43,7 @@ class AgeWidgetProvider : AppWidgetProvider() {
                 val currentTime = System.currentTimeMillis()
                 people.take(MAX_WIDGET_PEOPLE).forEach { person ->
                     val age = AgeCalculator.calculateAge(person.dateOfBirth, currentTime)
-
-                    // Don't use SECONDS in widget (battery concern), remove seconds flag if present
-                    val displayUnits = if (AgeUnits.hasUnit(person.displayUnits, AgeUnits.SECONDS)) {
-                        // Replace seconds with minutes for widget display
-                        (person.displayUnits and AgeUnits.SECONDS.inv()) or AgeUnits.MINUTES
-                    } else {
-                        person.displayUnits
-                    }
-
-                    val ageText = age.formatCompact(displayUnits)
+                    val ageText = age.formatCompact(person.displayUnits)
 
                     val personView = RemoteViews(context.packageName, R.layout.widget_person_item)
                     personView.setTextViewText(R.id.person_name, person.name)
@@ -114,8 +79,38 @@ class AgeWidgetProvider : AppWidgetProvider() {
                     appWidgetIds.forEach { appWidgetId ->
                         updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople)
                     }
+
                 }
             }
         }
+
+    }
+
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val database = AgeclockDatabase.getInstance(context)
+            val widgetPeople = database.personDao().getWidgetPeopleSync()
+
+            for (appWidgetId in appWidgetIds) {
+                updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople)
+            }
+
+            // Updates are handled by WorkManager via WidgetUpdateScheduler
+            // Widget updates every 15 minutes minimum (WorkManager limitation)
+        }
+    }
+
+    override fun onEnabled(context: Context) {
+        // Schedule periodic updates via WorkManager (for daily/midnight updates)
+        WidgetUpdateScheduler.scheduleWidgetUpdates(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        // Cancel all scheduled updates
+        WidgetUpdateScheduler.cancelWidgetUpdates(context)
     }
 }
