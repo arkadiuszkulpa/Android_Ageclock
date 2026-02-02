@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.ageclock.app.ui.home.HomeScreen
 import com.ageclock.app.ui.theme.AgeclockTheme
+import com.ageclock.app.widget.AgeWidgetProvider
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,5 +19,11 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(modifier = Modifier.fillMaxSize())
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Update widget when user returns to the app
+        AgeWidgetProvider.notifyWidgetDataChanged(this)
     }
 }
