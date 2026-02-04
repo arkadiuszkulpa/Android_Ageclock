@@ -24,6 +24,7 @@ import com.ageclock.app.data.model.AgeUnits
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.ui.addperson.AddEditPersonDialog
 import com.ageclock.app.ui.home.components.AboutBanner
+import com.ageclock.app.ui.home.components.AppHeader
 import com.ageclock.app.ui.home.components.ClockSection
 import com.ageclock.app.ui.home.components.PersonTile
 import com.ageclock.app.ui.theme.AgeclockTheme
@@ -63,6 +64,10 @@ fun HomeScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                item {
+                    AppHeader()
+                }
+
                 item {
                     AboutBanner()
                 }
@@ -151,6 +156,10 @@ private fun HomeScreenPreview(people: List<Person>) {
                     .padding(paddingValues),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                item {
+                    AppHeader()
+                }
+
                 item {
                     AboutBanner()
                 }

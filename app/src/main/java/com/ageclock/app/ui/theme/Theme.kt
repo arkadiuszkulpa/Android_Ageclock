@@ -13,20 +13,26 @@ import androidx.compose.ui.platform.LocalContext
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+    background = PalePurpleBackgroundDark,
+    surface = PalePurpleSurfaceDark,
+    surfaceVariant = PalePurpleSurfaceVariantDark
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
     secondary = PurpleGrey40,
-    tertiary = Pink40
+    tertiary = Pink40,
+    background = PalePurpleBackground,
+    surface = PalePurpleSurface,
+    surfaceVariant = PalePurpleSurfaceVariant
 )
 
 @Composable
 fun AgeclockTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Disabled dynamic color to use our custom pale purple theme
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
