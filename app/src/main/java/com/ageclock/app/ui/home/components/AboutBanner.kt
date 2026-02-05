@@ -42,7 +42,7 @@ fun AboutBanner(
     var isExpanded by rememberSaveable { mutableStateOf(false) }
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
-    val tabs = listOf("Children", "Parents")
+    val tabs = listOf("Children", "Parents", "Other")
 
     Card(
         modifier = modifier
@@ -109,6 +109,7 @@ fun AboutBanner(
                         when (selectedTab) {
                             0 -> ChildrenMotivation()
                             1 -> ParentsMotivation()
+                            2 -> OtherMotivation()
                         }
                     }
                 }
@@ -173,6 +174,38 @@ private fun ParentsMotivation() {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = "Visit them today. Call them now. Love while you can.",
+            style = MaterialTheme.typography.bodyLarge,
+            fontStyle = FontStyle.Italic,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
+}
+
+@Composable
+private fun OtherMotivation() {
+    Column {
+        Text(
+            text = "Track what matters to you.",
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Mark significant moments — weddings, graduations, the day you met someone special. Watch time flow since life-changing events.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Or look forward — count down to your holiday, a reunion, or that concert you've been waiting for.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Every date tells a story. What's yours?",
             style = MaterialTheme.typography.bodyLarge,
             fontStyle = FontStyle.Italic,
             fontWeight = FontWeight.Medium,

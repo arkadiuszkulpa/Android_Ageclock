@@ -15,10 +15,10 @@ import java.time.temporal.ChronoUnit
 object AgeCalculator {
 
     fun calculateAge(
-        birthDateMillis: Long,
+        dateMillis: Long,
         currentTimeMillis: Long = System.currentTimeMillis()
     ): CalculatedAge {
-        val birthDateTime = Instant.ofEpochMilli(birthDateMillis)
+        val dateTime = Instant.ofEpochMilli(dateMillis)
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
 
@@ -26,37 +26,47 @@ object AgeCalculator {
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
 
-        // Calculate total durations first
-        val totalSeconds = ChronoUnit.SECONDS.between(birthDateTime, currentDateTime)
-        val totalMinutes = ChronoUnit.MINUTES.between(birthDateTime, currentDateTime)
-        val totalHours = ChronoUnit.HOURS.between(birthDateTime, currentDateTime)
-        val totalDays = ChronoUnit.DAYS.between(birthDateTime, currentDateTime)
+        // Determine if this is a future date (countdown) or past date (age)
+        val isFuture = dateMillis > currentTimeMillis
+
+        // For calculations, always go from earlier to later date
+        val (startDateTime, endDateTime) = if (isFuture) {
+            currentDateTime to dateTime  // Countdown: now -> future
+        } else {
+            dateTime to currentDateTime  // Age: past -> now
+        }
+
+        // Calculate total durations (always positive)
+        val totalSeconds = ChronoUnit.SECONDS.between(startDateTime, endDateTime)
+        val totalMinutes = ChronoUnit.MINUTES.between(startDateTime, endDateTime)
+        val totalHours = ChronoUnit.HOURS.between(startDateTime, endDateTime)
+        val totalDays = ChronoUnit.DAYS.between(startDateTime, endDateTime)
 
         // For breakdown: progressively calculate each unit
-        var working = birthDateTime
+        var working = startDateTime
 
         // Calculate years
-        val years = ChronoUnit.YEARS.between(working, currentDateTime).toInt()
+        val years = ChronoUnit.YEARS.between(working, endDateTime).toInt()
         working = working.plusYears(years.toLong())
 
         // Calculate months
-        val months = ChronoUnit.MONTHS.between(working, currentDateTime).toInt()
+        val months = ChronoUnit.MONTHS.between(working, endDateTime).toInt()
         working = working.plusMonths(months.toLong())
 
         // Calculate days
-        val days = ChronoUnit.DAYS.between(working, currentDateTime).toInt()
+        val days = ChronoUnit.DAYS.between(working, endDateTime).toInt()
         working = working.plusDays(days.toLong())
 
         // Calculate hours
-        val hours = ChronoUnit.HOURS.between(working, currentDateTime).toInt()
+        val hours = ChronoUnit.HOURS.between(working, endDateTime).toInt()
         working = working.plusHours(hours.toLong())
 
         // Calculate minutes
-        val minutes = ChronoUnit.MINUTES.between(working, currentDateTime).toInt()
+        val minutes = ChronoUnit.MINUTES.between(working, endDateTime).toInt()
         working = working.plusMinutes(minutes.toLong())
 
         // Calculate seconds
-        val seconds = ChronoUnit.SECONDS.between(working, currentDateTime).toInt()
+        val seconds = ChronoUnit.SECONDS.between(working, endDateTime).toInt()
 
         return CalculatedAge(
             years = years,
@@ -68,7 +78,8 @@ object AgeCalculator {
             totalDays = totalDays,
             totalHours = totalHours,
             totalMinutes = totalMinutes,
-            totalSeconds = totalSeconds
+            totalSeconds = totalSeconds,
+            isFuture = isFuture
         )
     }
 

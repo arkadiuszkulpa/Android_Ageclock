@@ -127,11 +127,11 @@ fun AddEditPersonDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Date of Birth
+                // Date (birth date, event date, or future date)
                 OutlinedTextField(
                     value = formattedDate,
                     onValueChange = {},
-                    label = { Text("Date of Birth") },
+                    label = { Text("Date") },
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { showDatePicker = true }) {
@@ -146,11 +146,11 @@ fun AddEditPersonDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Time of Birth (optional)
+                // Time (optional)
                 OutlinedTextField(
                     value = formattedTime,
                     onValueChange = {},
-                    label = { Text("Time of Birth (optional)") },
+                    label = { Text("Time (optional)") },
                     readOnly = true,
                     trailingIcon = {
                         IconButton(onClick = { showTimePicker = true }) {
@@ -222,16 +222,13 @@ fun AddEditPersonDialog(
         }
     )
 
-    // Date picker dialog
+    // Date picker dialog - allows both past and future dates
     if (showDatePicker) {
         val currentTimeMillis = System.currentTimeMillis()
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = selectedDateMillis ?: currentTimeMillis,
-            selectableDates = object : androidx.compose.material3.SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    return utcTimeMillis <= currentTimeMillis
-                }
-            }
+            initialSelectedDateMillis = selectedDateMillis ?: currentTimeMillis
+            // No selectableDates restriction - all dates are allowed for tracking
+            // past events (birthdays, anniversaries) and future events (holidays, weddings)
         )
 
         DatePickerDialog(
@@ -268,7 +265,7 @@ fun AddEditPersonDialog(
 
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            title = { Text("Select Time of Birth") },
+            title = { Text("Select Time") },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),

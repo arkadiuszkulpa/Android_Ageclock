@@ -23,7 +23,7 @@ fun AppHeader(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "A g e C l o c k",
+            text = "T i m e K e e p e r",
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Light,
                 letterSpacing = 6.sp
