@@ -1,15 +1,20 @@
 package com.ageclock.app.ui.home
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -32,7 +37,8 @@ import com.ageclock.app.ui.theme.AgeclockTheme
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val people by viewModel.people.collectAsState()
     val showDialog by viewModel.showAddEditDialog.collectAsState()
@@ -65,7 +71,21 @@ fun HomeScreen(
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 item {
-                    AppHeader()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            AppHeader()
+                        }
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
 
                 item {
@@ -93,8 +113,8 @@ fun HomeScreen(
             AddEditPersonDialog(
                 person = selectedPerson,
                 onDismiss = { viewModel.dismissDialog() },
-                onSave = { name, dateOfBirth, granularity, showInWidget ->
-                    viewModel.savePerson(name, dateOfBirth, granularity, showInWidget)
+                onSave = { name, dateOfBirth, granularity, showInWidget, description ->
+                    viewModel.savePerson(name, dateOfBirth, granularity, showInWidget, description)
                 },
                 onDelete = selectedPerson?.let { person ->
                     { viewModel.deletePerson(person) }

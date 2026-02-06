@@ -56,10 +56,11 @@ import java.util.Locale
 fun AddEditPersonDialog(
     person: Person?,
     onDismiss: () -> Unit,
-    onSave: (name: String, dateOfBirth: Long, displayUnits: Int, showInWidget: Boolean) -> Unit,
+    onSave: (name: String, dateOfBirth: Long, displayUnits: Int, showInWidget: Boolean, description: String?) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
     var name by remember(person) { mutableStateOf(person?.name ?: "") }
+    var description by remember(person) { mutableStateOf(person?.description ?: "") }
     var selectedDateMillis by remember(person) { mutableStateOf(person?.dateOfBirth) }
     var selectedHour by remember(person) {
         mutableIntStateOf(
@@ -123,6 +124,22 @@ fun AddEditPersonDialog(
                     label = { Text("Name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Description (optional - for AI context)
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description (optional)") },
+                    placeholder = { Text("e.g., My oldest daughter, Wedding anniversary") },
+                    singleLine = false,
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        Text("Helps generate personalized widget messages")
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -194,7 +211,13 @@ fun AddEditPersonDialog(
             Button(
                 onClick = {
                     finalDateTimeMillis?.let { dateTimeMillis ->
-                        onSave(name.trim(), dateTimeMillis, displayUnits, showInWidget)
+                        onSave(
+                            name.trim(),
+                            dateTimeMillis,
+                            displayUnits,
+                            showInWidget,
+                            description.trim().ifEmpty { null }
+                        )
                     }
                 },
                 enabled = isValid
@@ -301,7 +324,7 @@ private fun AddPersonDialogPreview() {
         AddEditPersonDialog(
             person = null,
             onDismiss = {},
-            onSave = { _, _, _, _ -> }
+            onSave = { _, _, _, _, _ -> }
         )
     }
 }
@@ -316,10 +339,11 @@ private fun EditPersonDialogPreview() {
                 name = "Emma",
                 dateOfBirth = System.currentTimeMillis() - (5L * 365 * 24 * 60 * 60 * 1000),
                 displayUnits = AgeUnits.YEARS_MONTHS_DAYS,
-                showInWidget = true
+                showInWidget = true,
+                description = "My oldest daughter"
             ),
             onDismiss = {},
-            onSave = { _, _, _, _ -> },
+            onSave = { _, _, _, _, _ -> },
             onDelete = {}
         )
     }

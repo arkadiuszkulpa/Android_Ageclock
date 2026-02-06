@@ -11,5 +11,8 @@ data class Person(
     val dateOfBirth: Long, // Epoch millis
     val displayUnits: Int = AgeUnits.YEARS_MONTHS_DAYS, // Bitmask of AgeUnits
     val showInWidget: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val description: String? = null, // Optional description for AI context
+    val aiMessages: String? = null, // JSON array of AI-generated messages
+    val aiMessagesGeneratedAt: Long? = null // Timestamp of last AI generation
 )

@@ -12,11 +12,15 @@ import android.widget.RemoteViews
 import com.ageclock.app.MainActivity
 import com.ageclock.app.R
 import com.ageclock.app.data.local.AgeclockDatabase
+import com.ageclock.app.data.local.SettingsDataStore
 import com.ageclock.app.data.model.Person
 import com.ageclock.app.util.AgeCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import java.time.LocalDate
 
 class AgeWidgetProvider : AppWidgetProvider() {
 
@@ -27,7 +31,8 @@ class AgeWidgetProvider : AppWidgetProvider() {
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
-            people: List<Person>
+            people: List<Person>,
+            aiEnabled: Boolean = false
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_age)
 
@@ -42,18 +47,42 @@ class AgeWidgetProvider : AppWidgetProvider() {
 
                 // Add each person (limit to MAX_WIDGET_PEOPLE for space)
                 val currentTime = System.currentTimeMillis()
+                val dayOfYear = LocalDate.now().dayOfYear
+
                 people.take(MAX_WIDGET_PEOPLE).forEach { person ->
                     val age = AgeCalculator.calculateAge(person.dateOfBirth, currentTime)
-                    val ageText = age.formatCompact(person.displayUnits)
 
-                    // Combine name (bold) and age into single text that wraps naturally
-                    val combinedText = Html.fromHtml(
-                        "<b>${person.name}</b> $ageText",
-                        Html.FROM_HTML_MODE_COMPACT
-                    )
+                    // Try to use AI message if available and enabled
+                    val displayText = if (aiEnabled && !person.aiMessages.isNullOrEmpty()) {
+                        try {
+                            val messages = Json.decodeFromString<List<String>>(person.aiMessages)
+                            if (messages.isNotEmpty()) {
+                                // Rotate message daily based on day of year
+                                messages[dayOfYear % messages.size]
+                            } else {
+                                null
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else {
+                        null
+                    }
 
                     val personView = RemoteViews(context.packageName, R.layout.widget_person_item)
-                    personView.setTextViewText(R.id.person_info, combinedText)
+
+                    if (displayText != null) {
+                        // Use AI message directly (no HTML formatting needed)
+                        personView.setTextViewText(R.id.person_info, displayText)
+                    } else {
+                        // Fall back to standard format
+                        val ageText = age.formatCompact(person.displayUnits)
+                        val combinedText = Html.fromHtml(
+                            "<b>${person.name}</b> $ageText",
+                            Html.FROM_HTML_MODE_COMPACT
+                        )
+                        personView.setTextViewText(R.id.person_info, combinedText)
+                    }
 
                     views.addView(R.id.widget_people_container, personView)
                 }
@@ -81,11 +110,12 @@ class AgeWidgetProvider : AppWidgetProvider() {
                 CoroutineScope(Dispatchers.IO).launch {
                     val database = AgeclockDatabase.getInstance(context)
                     val widgetPeople = database.personDao().getWidgetPeopleSync()
+                    val settingsDataStore = SettingsDataStore(context)
+                    val aiEnabled = settingsDataStore.aiMessagesEnabled.first()
 
                     appWidgetIds.forEach { appWidgetId ->
-                        updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople)
+                        updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople, aiEnabled)
                     }
-
                 }
             }
         }
@@ -100,9 +130,11 @@ class AgeWidgetProvider : AppWidgetProvider() {
         CoroutineScope(Dispatchers.IO).launch {
             val database = AgeclockDatabase.getInstance(context)
             val widgetPeople = database.personDao().getWidgetPeopleSync()
+            val settingsDataStore = SettingsDataStore(context)
+            val aiEnabled = settingsDataStore.aiMessagesEnabled.first()
 
             for (appWidgetId in appWidgetIds) {
-                updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople)
+                updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople, aiEnabled)
             }
 
             // Updates are handled by WorkManager via WidgetUpdateScheduler

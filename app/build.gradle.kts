@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
 
@@ -62,4 +63,13 @@ dependencies {
 
     // ViewModel Compose
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // On-device LLM inference (to be enabled when library integration is tested)
+    // implementation(libs.kotlin.llamacpp)
+
+    // DataStore for preferences
+    implementation(libs.androidx.datastore.preferences)
+
+    // JSON serialization
+    implementation(libs.kotlinx.serialization.json)
 }
