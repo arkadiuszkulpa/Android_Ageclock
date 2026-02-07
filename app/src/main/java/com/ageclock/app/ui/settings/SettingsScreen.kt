@@ -86,6 +86,7 @@ fun SettingsScreen(
                 onToggleAi = { viewModel.setAiMessagesEnabled(it) },
                 onDownloadModel = { viewModel.downloadModel() },
                 onDeleteModel = { viewModel.deleteModel() },
+                onRegenerateAll = { viewModel.regenerateAllMessages() },
                 onClearError = { viewModel.clearError() }
             )
 
@@ -102,6 +103,7 @@ private fun AiMessagesSection(
     onToggleAi: (Boolean) -> Unit,
     onDownloadModel: () -> Unit,
     onDeleteModel: () -> Unit,
+    onRegenerateAll: () -> Unit,
     onClearError: () -> Unit
 ) {
     Card(
@@ -176,10 +178,11 @@ private fun AiMessagesSection(
             if (uiState.isModelDownloaded) {
                 // Model is downloaded - show toggle and delete option
                 ModelDownloadedSection(
+                    uiState = uiState,
                     aiEnabled = aiEnabled,
-                    isDeleting = uiState.isDeleting,
                     onToggleAi = onToggleAi,
-                    onDeleteModel = onDeleteModel
+                    onDeleteModel = onDeleteModel,
+                    onRegenerateAll = onRegenerateAll
                 )
             } else if (uiState.isDownloading) {
                 // Currently downloading
@@ -201,10 +204,11 @@ private fun AiMessagesSection(
 
 @Composable
 private fun ModelDownloadedSection(
+    uiState: SettingsUiState,
     aiEnabled: Boolean,
-    isDeleting: Boolean,
     onToggleAi: (Boolean) -> Unit,
-    onDeleteModel: () -> Unit
+    onDeleteModel: () -> Unit,
+    onRegenerateAll: () -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -240,6 +244,42 @@ private fun ModelDownloadedSection(
             }
         }
 
+        // Regenerate All button
+        if (aiEnabled) {
+            if (uiState.isRegenerating) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Regenerating messages (${uiState.regenerateCurrent}/${uiState.regenerateTotal})...",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    LinearProgressIndicator(
+                        progress = { uiState.regenerateProgress },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            } else {
+                Button(
+                    onClick = onRegenerateAll,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Regenerate All Messages")
+                }
+                Text(
+                    text = "Updates messages for all entries using current display settings",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
         // Model info and delete
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -259,7 +299,7 @@ private fun ModelDownloadedSection(
                 )
             }
 
-            if (isDeleting) {
+            if (uiState.isDeleting) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     strokeWidth = 2.dp

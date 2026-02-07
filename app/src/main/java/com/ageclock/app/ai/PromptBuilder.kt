@@ -73,61 +73,53 @@ Your messages:"""
 
     fun buildSimpleFallbackMessages(person: Person, age: CalculatedAge): List<String> {
         val name = person.name
+        val formattedAge = age.formatCompact(person.displayUnits)
         val messages = mutableListOf<String>()
 
         if (age.isFuture) {
-            // Countdown messages
-            when {
-                age.totalDays <= 7 -> {
-                    messages.add("Only ${age.days} days until $name!")
-                    messages.add("$name is almost here!")
-                    messages.add("Just ${age.days} days to go!")
-                    messages.add("The countdown is on for $name")
-                    messages.add("Get ready - $name is coming soon!")
-                }
-                age.totalDays <= 30 -> {
-                    messages.add("${age.days} days until $name")
-                    messages.add("$name is just around the corner")
-                    messages.add("Looking forward to $name")
-                    messages.add("Not long now until $name!")
-                    messages.add("Counting down to $name")
-                }
-                age.months > 0 -> {
-                    messages.add("${age.months} months until $name")
-                    messages.add("$name is coming in ${age.months} months")
-                    messages.add("Mark your calendar for $name")
-                    messages.add("Looking ahead to $name")
-                    messages.add("The wait for $name continues")
-                }
-                else -> {
-                    messages.add("${age.years} years until $name")
-                    messages.add("$name is ${age.years} years away")
-                    messages.add("Planning ahead for $name")
-                }
-            }
+            // Countdown messages - use the user's selected format
+            messages.add("$name - $formattedAge")
+            messages.add("$formattedAge until $name")
+            messages.add("Counting down: $formattedAge")
+            messages.add("$name is $formattedAge away")
+            messages.add("Looking forward to $name")
         } else {
-            // Past date messages (age/anniversary)
+            // Past date messages - use the user's selected format
+            val description = person.description?.lowercase() ?: ""
+
+            // Context-aware messages based on description
             when {
-                age.years == 0 && age.months < 12 -> {
-                    messages.add("$name is ${age.months} months old")
-                    messages.add("${age.months} months with $name")
-                    messages.add("Cherish these early days with $name")
-                    messages.add("$name - ${age.totalDays} precious days")
-                    messages.add("Every day with $name is special")
+                description.contains("daughter") || description.contains("son") ||
+                description.contains("child") || description.contains("kid") -> {
+                    messages.add("$name - $formattedAge of joy")
+                    messages.add("Cherish $name at $formattedAge")
+                    messages.add("$formattedAge with $name")
+                    messages.add("$name is growing: $formattedAge")
+                    messages.add("Treasure every moment with $name")
                 }
-                age.years in 1..10 -> {
-                    messages.add("$name is ${age.years} years old")
-                    messages.add("${age.years} wonderful years with $name")
-                    messages.add("Cherish every moment with $name")
-                    messages.add("$name - ${age.years} years of memories")
-                    messages.add("Time flies with $name")
+                description.contains("mom") || description.contains("dad") ||
+                description.contains("parent") || description.contains("grandpa") ||
+                description.contains("grandma") || description.contains("mother") ||
+                description.contains("father") -> {
+                    messages.add("$name - $formattedAge of wisdom")
+                    messages.add("$formattedAge with $name")
+                    messages.add("Cherish $name today")
+                    messages.add("$name: $formattedAge of love")
+                    messages.add("Visit $name while you can")
+                }
+                description.contains("wedding") || description.contains("anniversary") -> {
+                    messages.add("$formattedAge of marriage")
+                    messages.add("$name - $formattedAge together")
+                    messages.add("Celebrating $formattedAge")
+                    messages.add("$formattedAge of love")
+                    messages.add("$name: $formattedAge strong")
                 }
                 else -> {
-                    messages.add("$name - ${age.years} years")
-                    messages.add("${age.years} years of $name")
-                    messages.add("Celebrating ${age.years} years")
-                    messages.add("$name: ${age.totalDays.formatCompact()} days")
-                    messages.add("A journey of ${age.years} years")
+                    messages.add("$name - $formattedAge")
+                    messages.add("$formattedAge with $name")
+                    messages.add("$name: $formattedAge")
+                    messages.add("Celebrating $name at $formattedAge")
+                    messages.add("$formattedAge of memories")
                 }
             }
         }
