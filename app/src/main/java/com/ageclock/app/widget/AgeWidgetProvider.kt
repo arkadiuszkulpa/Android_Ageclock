@@ -20,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import java.time.LocalDate
 
 class AgeWidgetProvider : AppWidgetProvider() {
 
@@ -32,7 +31,8 @@ class AgeWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
             people: List<Person>,
-            aiEnabled: Boolean = false
+            aiEnabled: Boolean = false,
+            messageIndex: Int = 0
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_age)
 
@@ -47,7 +47,6 @@ class AgeWidgetProvider : AppWidgetProvider() {
 
                 // Add each person (limit to MAX_WIDGET_PEOPLE for space)
                 val currentTime = System.currentTimeMillis()
-                val dayOfYear = LocalDate.now().dayOfYear
 
                 people.take(MAX_WIDGET_PEOPLE).forEach { person ->
                     val age = AgeCalculator.calculateAge(person.dateOfBirth, currentTime)
@@ -57,8 +56,8 @@ class AgeWidgetProvider : AppWidgetProvider() {
                         try {
                             val messages = Json.decodeFromString<List<String>>(person.aiMessages)
                             if (messages.isNotEmpty()) {
-                                // Rotate message daily based on day of year
-                                messages[dayOfYear % messages.size]
+                                // Rotate message based on stored message index (increments on each app resume)
+                                messages[messageIndex % messages.size]
                             } else {
                                 null
                             }
@@ -112,9 +111,10 @@ class AgeWidgetProvider : AppWidgetProvider() {
                     val widgetPeople = database.personDao().getWidgetPeopleSync()
                     val settingsDataStore = SettingsDataStore(context)
                     val aiEnabled = settingsDataStore.aiMessagesEnabled.first()
+                    val messageIndex = settingsDataStore.getMessageIndex()
 
                     appWidgetIds.forEach { appWidgetId ->
-                        updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople, aiEnabled)
+                        updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople, aiEnabled, messageIndex)
                     }
                 }
             }
@@ -132,9 +132,10 @@ class AgeWidgetProvider : AppWidgetProvider() {
             val widgetPeople = database.personDao().getWidgetPeopleSync()
             val settingsDataStore = SettingsDataStore(context)
             val aiEnabled = settingsDataStore.aiMessagesEnabled.first()
+            val messageIndex = settingsDataStore.getMessageIndex()
 
             for (appWidgetId in appWidgetIds) {
-                updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople, aiEnabled)
+                updateAppWidget(context, appWidgetManager, appWidgetId, widgetPeople, aiEnabled, messageIndex)
             }
 
             // Updates are handled by WorkManager via WidgetUpdateScheduler
