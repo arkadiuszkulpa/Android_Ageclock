@@ -3,7 +3,6 @@ package com.ageclock.app.ui.home
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ageclock.app.ai.MessageGenerator
 import com.ageclock.app.ai.ModelManager
 import com.ageclock.app.ai.PromptBuilder
 import com.ageclock.app.data.local.AgeclockDatabase
@@ -29,10 +28,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AgeclockDatabase.getInstance(application)
     private val repository = PersonRepository(database.personDao())
     private val settingsDataStore = SettingsDataStore(application)
-    private var messageGenerator: MessageGenerator? = null
-
-    private val _isGeneratingMessages = MutableStateFlow(false)
-    val isGeneratingMessages: StateFlow<Boolean> = _isGeneratingMessages.asStateFlow()
 
     val people: StateFlow<List<Person>> = repository.allPeople
         .stateIn(
@@ -75,12 +70,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
             if (existingPerson != null) {
                 // Update existing
+                // Clear AI messages if display units changed (they need to be regenerated)
+                val displayUnitsChanged = existingPerson.displayUnits != displayUnits
                 savedPerson = existingPerson.copy(
                     name = name,
                     dateOfBirth = dateOfBirth,
                     displayUnits = displayUnits,
                     showInWidget = showInWidget,
-                    description = description
+                    description = description,
+                    // Clear messages if units changed so they get regenerated
+                    aiMessages = if (displayUnitsChanged) null else existingPerson.aiMessages,
+                    aiMessagesGeneratedAt = if (displayUnitsChanged) null else existingPerson.aiMessagesGeneratedAt
                 )
                 repository.update(savedPerson)
             } else {
@@ -95,13 +95,21 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 repository.insert(savedPerson)
             }
             dismissDialog()
-            notifyWidgetUpdate()
 
             // Trigger AI message generation if enabled and model is downloaded
+            // This will also notify widget update after messages are generated
             generateAiMessagesForPerson(savedPerson)
+
+            // Also notify widget immediately for the basic person data update
+            notifyWidgetUpdate()
         }
     }
 
+    /**
+     * Generate AI messages for a person using fallback template messages.
+     * Messages are context-aware based on the person's description and use
+     * the exact display units the user selected.
+     */
     private fun generateAiMessagesForPerson(person: Person) {
         viewModelScope.launch {
             val context = getApplication<Application>()
@@ -111,65 +119,28 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
-            _isGeneratingMessages.value = true
-
             try {
                 withContext(Dispatchers.IO) {
-                    // Initialize generator if needed
-                    if (messageGenerator == null) {
-                        messageGenerator = MessageGenerator(context)
-                        messageGenerator?.initialize()
-                    }
+                    val age = AgeCalculator.calculateAge(person.dateOfBirth)
+                    val messages = PromptBuilder.buildSimpleFallbackMessages(person, age)
 
-                    val generator = messageGenerator
-                    if (generator != null && generator.isReady()) {
-                        val age = AgeCalculator.calculateAge(person.dateOfBirth)
-                        val messages = generator.generateMessages(person, age)
-
-                        if (messages.isNotEmpty()) {
-                            // Get fresh person from DB (in case ID was auto-generated)
-                            val freshPerson = repository.getByName(person.name)
-                            if (freshPerson != null) {
-                                val messagesJson = Json.encodeToString(messages)
-                                repository.update(
-                                    freshPerson.copy(
-                                        aiMessages = messagesJson,
-                                        aiMessagesGeneratedAt = System.currentTimeMillis()
-                                    )
-                                )
-                                notifyWidgetUpdate()
-                            }
-                        }
-                    } else {
-                        // Fall back to simple messages if LLM not ready
-                        val age = AgeCalculator.calculateAge(person.dateOfBirth)
-                        val fallbackMessages = PromptBuilder.buildSimpleFallbackMessages(person, age)
-
-                        val freshPerson = repository.getByName(person.name)
-                        if (freshPerson != null) {
-                            val messagesJson = Json.encodeToString(fallbackMessages)
-                            repository.update(
-                                freshPerson.copy(
-                                    aiMessages = messagesJson,
-                                    aiMessagesGeneratedAt = System.currentTimeMillis()
-                                )
+                    // Get fresh person from DB (in case ID was auto-generated)
+                    val freshPerson = repository.getByName(person.name)
+                    if (freshPerson != null) {
+                        val messagesJson = Json.encodeToString(messages)
+                        repository.update(
+                            freshPerson.copy(
+                                aiMessages = messagesJson,
+                                aiMessagesGeneratedAt = System.currentTimeMillis()
                             )
-                            notifyWidgetUpdate()
-                        }
+                        )
+                        notifyWidgetUpdate()
                     }
                 }
             } catch (e: Exception) {
                 // Log error but don't crash - fallback to standard display
-            } finally {
-                _isGeneratingMessages.value = false
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        messageGenerator?.release()
-        messageGenerator = null
     }
 
     fun deletePerson(person: Person) {

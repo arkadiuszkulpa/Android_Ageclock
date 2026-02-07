@@ -45,11 +45,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Increment message index to rotate AI messages on each app resume
+        // Increment message index and update widget in sequence
+        // This ensures the widget reads the incremented index
         lifecycleScope.launch {
             settingsDataStore.incrementMessageIndex()
+            // Update widget AFTER increment completes
+            AgeWidgetProvider.notifyWidgetDataChanged(this@MainActivity)
         }
-        // Update widget when user returns to the app
-        AgeWidgetProvider.notifyWidgetDataChanged(this)
     }
 }

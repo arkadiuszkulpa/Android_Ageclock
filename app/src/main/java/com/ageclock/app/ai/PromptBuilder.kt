@@ -1,76 +1,18 @@
 package com.ageclock.app.ai
 
-import com.ageclock.app.data.model.AgeUnits
 import com.ageclock.app.data.model.CalculatedAge
 import com.ageclock.app.data.model.Person
 
+/**
+ * Builds context-aware messages for widget display.
+ * Messages use the exact display units the user selected.
+ */
 object PromptBuilder {
 
-    fun buildPrompt(person: Person, age: CalculatedAge): String {
-        val name = person.name
-        val description = person.description ?: ""
-        val type = if (age.isFuture) "countdown to future event" else "time since past event"
-        val formattedAge = age.format(person.displayUnits)
-
-        val contextHint = when {
-            description.contains("daughter", ignoreCase = true) ||
-            description.contains("son", ignoreCase = true) ||
-            description.contains("child", ignoreCase = true) ||
-            description.contains("kid", ignoreCase = true) -> "child"
-
-            description.contains("parent", ignoreCase = true) ||
-            description.contains("mom", ignoreCase = true) ||
-            description.contains("dad", ignoreCase = true) ||
-            description.contains("mother", ignoreCase = true) ||
-            description.contains("father", ignoreCase = true) ||
-            description.contains("grandpa", ignoreCase = true) ||
-            description.contains("grandma", ignoreCase = true) -> "parent/elder"
-
-            description.contains("wedding", ignoreCase = true) ||
-            description.contains("anniversary", ignoreCase = true) -> "celebration"
-
-            description.contains("holiday", ignoreCase = true) ||
-            description.contains("vacation", ignoreCase = true) ||
-            description.contains("trip", ignoreCase = true) -> "holiday"
-
-            else -> "general"
-        }
-
-        val toneGuidance = when (contextHint) {
-            "child" -> "Emphasize cherishing moments, growth, and the fleeting nature of childhood."
-            "parent/elder" -> "Express warmth, gratitude, and the importance of spending time together."
-            "celebration" -> "Build excitement and anticipation for the special day."
-            "holiday" -> "Create excitement and anticipation for the upcoming trip."
-            else -> "Be warm and personal."
-        }
-
-        return """You are writing short widget messages for a time-tracking app called TimeKeeper.
-
-Entry name: $name
-Description: $description
-Type: $type
-Current value: $formattedAge
-
-$toneGuidance
-
-Generate exactly 5 short messages (max 50 characters each). Each message should:
-- Be warm and personal
-- Reference the name "$name" and the time
-- Fit on a small widget
-- Vary in tone (some excited, some reflective)
-
-Format: Number each message 1-5, one per line.
-
-Example format:
-1. Emma turns 10 in just 2 weeks!
-2. Cherish today with Emma
-3. Only 14 days until Emma's birthday
-4. 10 years of memories ahead
-5. Time flies - enjoy every moment
-
-Your messages:"""
-    }
-
+    /**
+     * Generate 5 context-aware messages based on the person's description.
+     * Uses compact formatting suitable for widget display.
+     */
     fun buildSimpleFallbackMessages(person: Person, age: CalculatedAge): List<String> {
         val name = person.name
         val formattedAge = age.formatCompact(person.displayUnits)
@@ -125,13 +67,5 @@ Your messages:"""
         }
 
         return messages.take(5)
-    }
-
-    private fun Long.formatCompact(): String {
-        return when {
-            this >= 1_000_000 -> "${this / 1_000_000}M"
-            this >= 1_000 -> "${this / 1_000}K"
-            else -> this.toString()
-        }
     }
 }
