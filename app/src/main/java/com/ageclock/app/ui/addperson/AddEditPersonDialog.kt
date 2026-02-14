@@ -1,16 +1,25 @@
 package com.ageclock.app.ui.addperson
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -44,6 +53,7 @@ import com.ageclock.app.data.model.Person
 import com.ageclock.app.ui.addperson.components.UnitSelector
 import com.ageclock.app.ui.theme.AgeclockTheme
 import com.ageclock.app.util.AgeCalculator
+import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -56,10 +66,11 @@ import java.util.Locale
 fun AddEditPersonDialog(
     person: Person?,
     onDismiss: () -> Unit,
-    onSave: (name: String, dateOfBirth: Long, displayUnits: Int, showInWidget: Boolean) -> Unit,
+    onSave: (name: String, dateOfBirth: Long, displayUnits: Int, showInWidget: Boolean, description: String?) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
     var name by remember(person) { mutableStateOf(person?.name ?: "") }
+    var description by remember(person) { mutableStateOf(person?.description ?: "") }
     var selectedDateMillis by remember(person) { mutableStateOf(person?.dateOfBirth) }
     var selectedHour by remember(person) {
         mutableIntStateOf(
@@ -81,6 +92,18 @@ fun AddEditPersonDialog(
     var showInWidget by remember(person) { mutableStateOf(person?.showInWidget ?: false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showAiMessages by remember { mutableStateOf(false) }
+
+    // Parse AI messages if available
+    val aiMessages: List<String> = remember(person?.aiMessages) {
+        person?.aiMessages?.let { json ->
+            try {
+                Json.decodeFromString<List<String>>(json)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } ?: emptyList()
+    }
 
     val isEditing = person != null
     val isValid by remember {
@@ -123,6 +146,22 @@ fun AddEditPersonDialog(
                     label = { Text("Name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Description (optional - for AI context)
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description (optional)") },
+                    placeholder = { Text("e.g., My oldest daughter, Wedding anniversary") },
+                    singleLine = false,
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        Text("Helps generate personalized widget messages")
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -188,13 +227,102 @@ fun AddEditPersonDialog(
                         onCheckedChange = { showInWidget = it }
                     )
                 }
+
+                // AI Messages Section (only show if there are messages)
+                if (aiMessages.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    ) {
+                        // Collapsible header
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showAiMessages = !showAiMessages }
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "AI Messages (${aiMessages.size})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Icon(
+                                imageVector = if (showAiMessages) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (showAiMessages) "Collapse" else "Expand",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        // Message list
+                        AnimatedVisibility(visible = showAiMessages) {
+                            Column(
+                                modifier = Modifier.padding(
+                                    start = 12.dp,
+                                    end = 12.dp,
+                                    bottom = 12.dp
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                aiMessages.forEachIndexed { index, message ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = MaterialTheme.colorScheme.surface,
+                                                shape = RoundedCornerShape(4.dp)
+                                            )
+                                            .padding(8.dp),
+                                        verticalAlignment = Alignment.Top
+                                    ) {
+                                        Text(
+                                            text = "${index + 1}.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.width(20.dp)
+                                        )
+                                        Text(
+                                            text = message,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
                     finalDateTimeMillis?.let { dateTimeMillis ->
-                        onSave(name.trim(), dateTimeMillis, displayUnits, showInWidget)
+                        onSave(
+                            name.trim(),
+                            dateTimeMillis,
+                            displayUnits,
+                            showInWidget,
+                            description.trim().ifEmpty { null }
+                        )
                     }
                 },
                 enabled = isValid
@@ -301,7 +429,7 @@ private fun AddPersonDialogPreview() {
         AddEditPersonDialog(
             person = null,
             onDismiss = {},
-            onSave = { _, _, _, _ -> }
+            onSave = { _, _, _, _, _ -> }
         )
     }
 }
@@ -316,10 +444,12 @@ private fun EditPersonDialogPreview() {
                 name = "Emma",
                 dateOfBirth = System.currentTimeMillis() - (5L * 365 * 24 * 60 * 60 * 1000),
                 displayUnits = AgeUnits.YEARS_MONTHS_DAYS,
-                showInWidget = true
+                showInWidget = true,
+                description = "My oldest daughter",
+                aiMessages = """["Emma - 5y, 4mo, 7d of joy","Cherish Emma at 5y, 4mo, 7d","5y, 4mo, 7d with Emma","Emma is growing: 5y, 4mo, 7d","Treasure every moment with Emma"]"""
             ),
             onDismiss = {},
-            onSave = { _, _, _, _ -> },
+            onSave = { _, _, _, _, _ -> },
             onDelete = {}
         )
     }

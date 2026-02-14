@@ -5,7 +5,9 @@
       "Bash(./gradlew assembleDebug:*)",
       "Bash(where:*)",
       "Bash(gradlew.bat assembleDebug:*)",
-      "Bash(cmd /c \"gradlew.bat assembleDebug\")"
+      "Bash(cmd /c \"gradlew.bat assembleDebug\")",
+      "WebFetch(domain:github.com)",
+      "Bash(cmd.exe /c \"gradlew.bat assembleDebug\")"
     ]
   }
 }

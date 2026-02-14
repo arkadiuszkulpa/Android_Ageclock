@@ -12,6 +12,8 @@ class PersonRepository(private val personDao: PersonDao) {
 
     suspend fun getById(id: Long): Person? = personDao.getById(id)
 
+    suspend fun getByName(name: String): Person? = personDao.getByName(name)
+
     suspend fun insert(person: Person): Long = personDao.insert(person)
 
     suspend fun update(person: Person) = personDao.update(person)

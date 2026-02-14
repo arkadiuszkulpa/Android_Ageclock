@@ -1,6 +1,5 @@
 package com.ageclock.app.ui.home
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -32,7 +31,8 @@ import com.ageclock.app.ui.theme.AgeclockTheme
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val people by viewModel.people.collectAsState()
     val showDialog by viewModel.showAddEditDialog.collectAsState()
@@ -65,7 +65,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 item {
-                    AppHeader()
+                    AppHeader(onSettingsClick = onNavigateToSettings)
                 }
 
                 item {
@@ -93,8 +93,8 @@ fun HomeScreen(
             AddEditPersonDialog(
                 person = selectedPerson,
                 onDismiss = { viewModel.dismissDialog() },
-                onSave = { name, dateOfBirth, granularity, showInWidget ->
-                    viewModel.savePerson(name, dateOfBirth, granularity, showInWidget)
+                onSave = { name, dateOfBirth, granularity, showInWidget, description ->
+                    viewModel.savePerson(name, dateOfBirth, granularity, showInWidget, description)
                 },
                 onDelete = selectedPerson?.let { person ->
                     { viewModel.deletePerson(person) }
@@ -157,7 +157,7 @@ private fun HomeScreenPreview(people: List<Person>) {
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 item {
-                    AppHeader()
+                    AppHeader(onSettingsClick = {})
                 }
 
                 item {

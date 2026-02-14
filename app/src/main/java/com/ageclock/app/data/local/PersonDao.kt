@@ -22,6 +22,9 @@ interface PersonDao {
     @Query("SELECT * FROM people WHERE id = :id")
     suspend fun getById(id: Long): Person?
 
+    @Query("SELECT * FROM people WHERE name = :name LIMIT 1")
+    suspend fun getByName(name: String): Person?
+
     @Insert
     suspend fun insert(person: Person): Long
 
