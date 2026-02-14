@@ -12,6 +12,7 @@ lifecycleViewmodelCompose = "2.8.7"
 kotlinLlamaCpp = "0.2.0"
 datastore = "1.1.1"
 kotlinxSerializationJson = "1.6.3"
+playPublisher = "3.10.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,3 +40,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+play-publisher = { id = "com.github.triplet.play", version.ref = "playPublisher" }
